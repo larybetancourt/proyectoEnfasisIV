@@ -1,0 +1,104 @@
+docker exec -it tutor_local-mysql-1 mysql -u root -p
+
+grep MYSQL_ROOT_PASSWORD -r /home/juanes/.local/share/tutor/env/local/
+password : 6FNEUhPC
+
+USE openedx;
+SHOW TABLES LIKE '%discussion%';
+SHOW TABLES LIKE '%comment%';
+
+
+SELECT DISTINCT
+    au.username AS usuario
+FROM
+    forum_comment AS fc
+JOIN
+    auth_user AS au ON au.id = fc.author_id
+WHERE
+    fc.course_id = 'course-v1:asdasd+123+prueba.123';
+
+
+para implementar el script
+
+docker cp export_forum_users_mfe.py tutor_local-lms-1:/openedx/edx-platform/
+
+docker exec -it tutor_local-lms-1 bash
+
+cd /openedx/edx-platform
+ls | grep export
+
+pip install mysql-connector-python
+
+python3 export_forum_users_mfe.py
+
+
+
+
+
+
+
+implementacion script con tiempo y carpeta compartida
+
+creamos una carpeta compartida con el contenedor
+
+mkdir -p ~/openedx_shared
+
+
+
+creamos un parche para instalar la carpeta en el contenedor
+
+mkdir -p ~/.local/share/tutor/env/local/patches
+
+nano ~/.local/share/tutor/env/local/patches/lms-extra-volumes.yml
+
+services:
+  lms:
+    volumes:
+      - ~/openedx_shared:/openedx/shared
+
+
+
+creamos el archivo
+
+nano ~/.local/share/tutor/env/local/docker-compose.override.yml
+
+
+
+version: "3.7"
+
+services:
+  lms:
+    volumes:
+      - /home/juanes/openedx_shared:/openedx/shared
+
+
+reiniciamos los contenedores
+
+tutor config save
+tutor local stop
+tutor local start -d
+
+
+creamos el script
+
+nano export_forum_recent.py
+
+lo copiamos en el lms 
+
+docker cp export_forum_recent.py tutor_local-lms-1:/openedx/edx-platform/
+
+
+arrancamos el contenedor
+
+docker exec -it tutor_local-lms-1 bash
+
+instalamos el conector
+
+pip install mysql-connector-python
+
+ejecutamos el script
+
+cd /openedx/edx-platform
+python3 export_forum_recent.py
+
+
